@@ -1,0 +1,34 @@
+name: Code Hygiene - Format & Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tools
+        run: pip install pre-commit black ruff isort
+
+      - name: Run pre-commit (format+lint)
+        run: pre-commit run --all-files --show-diff-on-failure
+
+      # generate & always upload the HTML, even if lint fails
+      - name: Generate HTML report
+        if: always()
+        run: python scripts/gen_report.py
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-hygiene-report
+          path: code_hygiene_report.html
